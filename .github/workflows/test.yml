@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: GitHub-Actions-Test
 
 permissions:
   id-token: write
@@ -36,3 +36,6 @@ jobs:
           az account show
           az group list
           pwd
+
+      - name: 'Run Bicep file'
+        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file main.bicep primaryRegion=uksouth secondaryRegion=ukwest
