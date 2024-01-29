@@ -40,7 +40,7 @@ jobs:
         run: ls
 
       - name: 'List contents of zip file'
-        run: less app_src.zip
+        run: unzip -l app_src.zip
 
       - name: 'Create Azure Function via Bicep'
         run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
