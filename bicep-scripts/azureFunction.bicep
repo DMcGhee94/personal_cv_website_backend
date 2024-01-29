@@ -23,6 +23,8 @@ param appInsightsLocation string
 ])
 param runtime string = 'node'
 
+param packageUri
+
 var functionAppName = appName
 var hostingPlanName = appName
 var applicationInsightsName = appName
@@ -90,6 +92,10 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
           value: functionWorkerRuntime
+        }
+        {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: packageUri
         }
       ]
       ftpsState: 'FtpsOnly'
