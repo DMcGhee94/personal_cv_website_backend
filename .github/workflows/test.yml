@@ -38,4 +38,4 @@ jobs:
           pwd
 
       - name: 'Run Bicep file'
-        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file main.bicep --parameters primaryRegion=uksouth secondaryRegion=ukwest
+        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file main.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
