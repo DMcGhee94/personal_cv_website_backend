@@ -1,5 +1,5 @@
-@description('The name of the Azure Function app.')
-param functionAppName string = 'func-${uniqueString(resourceGroup().id)}'
+@description('The name of the function app that you wish to create.')
+param appName string = 'fnapp${uniqueString(resourceGroup().id)}'
 
 @description('Storage Account type')
 @allowed([
@@ -13,122 +13,98 @@ param storageAccountType string = 'Standard_LRS'
 param location string = resourceGroup().location
 
 @description('Location for Application Insights')
-param appInsightsLocation string = resourceGroup().location
+param appInsightsLocation string
 
 @description('The language worker runtime to load in the function app.')
 @allowed([
-  'dotnet'
   'node'
-  'python'
+  'dotnet'
   'java'
 ])
-param functionWorkerRuntime string = 'node'
+param runtime string = 'node'
 
-@description('Specifies the OS used for the Azure Function hosting plan.')
-@allowed([
-  'Windows'
-  'Linux'
-])
-param functionPlanOS string = 'Windows'
-
-@description('Specifies the Azure Function hosting plan SKU.')
-@allowed([
-  'S1'
-  'S2'
-  'S3'
-])
-param functionAppPlanSku string = 'S1'
-
-@description('The zip content url.')
-param packageUri string
-
-@description('Only required for Linux app to represent runtime stack in the format of \'runtime|runtimeVersion\'. For example: \'python|3.9\'')
-param linuxFxVersion string = ''
-
-var hostingPlanName = functionAppName
-var applicationInsightsName = functionAppName
+var functionAppName = appName
+var hostingPlanName = appName
+var applicationInsightsName = appName
 var storageAccountName = '${uniqueString(resourceGroup().id)}azfunctions'
-var isReserved = ((functionPlanOS == 'Linux') ? true : false)
+var functionWorkerRuntime = runtime
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
   name: storageAccountName
   location: location
   sku: {
     name: storageAccountType
   }
   kind: 'Storage'
+  properties: {
+    supportsHttpsTrafficOnly: true
+    defaultToOAuthAuthentication: true
+  }
 }
 
-resource hostingPlan 'Microsoft.Web/serverfarms@2021-02-01' = {
+resource hostingPlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   name: hostingPlanName
   location: location
   sku: {
-    tier: 'Standard'
-    name: functionAppPlanSku
-    family: 'S'
-    capacity: 1
+    name: 'Y1'
+    tier: 'Dynamic'
   }
-  properties: {
-    reserved: isReserved
-  }
+  properties: {}
 }
 
-resource applicationInsights 'microsoft.insights/components@2020-02-02' = {
-  name: applicationInsightsName
-  location: appInsightsLocation
-  tags: {
-    'hidden-link:${resourceId('Microsoft.Web/sites', applicationInsightsName)}': 'Resource'
-  }
-  properties: {
-    Application_Type: 'web'
-  }
-  kind: 'web'
-}
-
-resource functionApp 'Microsoft.Web/sites@2021-02-01' = {
+resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
   name: functionAppName
   location: location
-  kind: (isReserved ? 'functionapp,linux' : 'functionapp')
+  kind: 'functionapp'
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
-    reserved: isReserved
     serverFarmId: hostingPlan.id
     siteConfig: {
-      alwaysOn: true
-      linuxFxVersion: (isReserved ? linuxFxVersion : json('null'))
       appSettings: [
         {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: reference(applicationInsights.id, '2015-05-01').InstrumentationKey
+          name: 'AzureWebJobsStorage'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
         }
         {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey=${listKeys(storageAccount.id, '2019-06-01').keys[0].value}'
+          name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+        }
+        {
+          name: 'WEBSITE_CONTENTSHARE'
+          value: toLower(functionAppName)
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
           value: '~4'
         }
         {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: functionWorkerRuntime
-        }
-        {
           name: 'WEBSITE_NODE_DEFAULT_VERSION'
           value: '~14'
         }
         {
-          name: 'WEBSITE_RUN_FROM_PACKAGE'
-          value: '0'
+          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+          value: applicationInsights.properties.InstrumentationKey
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: functionWorkerRuntime
         }
       ]
+      ftpsState: 'FtpsOnly'
+      minTlsVersion: '1.2'
     }
+    httpsOnly: true
   }
 }
 
-resource zipDeploy 'Microsoft.Web/sites/extensions@2021-02-01' = {
-  parent: functionApp
-  name: 'MSDeploy'
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: applicationInsightsName
+  location: appInsightsLocation
+  kind: 'web'
   properties: {
-    packageUri: packageUri
+    Application_Type: 'web'
+    Request_Source: 'rest'
   }
 }

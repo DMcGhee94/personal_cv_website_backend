@@ -31,16 +31,10 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: 'Create CosmosDB Table via Bicep'
-        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
+        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ../../bicep-scripts/cosmosDB-table.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
 
       - name: 'Zip up application code'
         run: zip -r app_src.zip src
 
-      - name: 'List folder directory'
-        run: ls
-
-      - name: 'List contents of zip file'
-        run: unzip -l app_src.zip
-
       - name: 'Create Azure Function via Bicep'
-        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
+        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ../../bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
