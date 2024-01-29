@@ -8,9 +8,7 @@ permissions:
 
 # Controls when the workflow will run
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -22,17 +20,27 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - name: 'Checkout repo'
+        uses: actions/checkout@v3
 
-      - name: 'AZ CLI login'
+      - name: 'Azure CLI login via OIDC'
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: 'Run Bicep file'
-        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file main.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
+      - name: 'Create CosmosDB Table via Bicep'
+        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
 
-      - name: 'List GitHub Workspace'
-        run: ls $GITHUB_WORKSPACE
+      - name: 'Zip up application code'
+        run: zip -r app_src.zip src
+
+      - name: 'List folder directory'
+        run: ls
+
+      - name: 'List contents of zip file'
+        run: less app_src.zip
+
+      - name: 'Create Azure Function via Bicep'
+        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
