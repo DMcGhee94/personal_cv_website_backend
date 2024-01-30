@@ -12,6 +12,11 @@ on:
 
 env:
   RESOURCE_GROUP: dev-personal-cv-website-backend
+  COSMOS_TABLE_NAME: website_visitor_count
+  FUNCTION_WORKER_RUNTIME: node
+  FUNCTION_LANGUAGE: --javascript
+  PRIMARY_DEPLOYMENT_REGION: uksouth
+  SECONDARY_DEPLOYMENT_REGION: ukwest
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -56,11 +61,11 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: 'Create CosmosDB Table via Bicep'
-        run: az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
+        run: az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=${{ env.COSMOS_TABLE_NAME }} primaryRegion=${{ env.PRIMARY_DEPLOYMENT_REGION }} secondaryRegion=${{ env.SECONDARY_DEPLOYMENT_REGION }}
 
       - name: 'Create Azure Function via Bicep'
         run: |
-          az deployment group create --name deploy-function --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
+          az deployment group create --name deploy-function --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/azureFunction.bicep --parameters runtime=${{ env.FUNCTION_WORKER_RUNTIME }} appInsightsLocation=${{ env.PRIMARY_DEPLOYMENT_REGION }}
           funcName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-function --query properties.outputs.funcName.value | tr -d \")
           echo "FUNCNAME=$funcName" >> $GITHUB_ENV
-          func azure functionapp publish $funcName
+          func azure functionapp publish $funcName ${{ env.FUNCTION_LANGUAGE }}
