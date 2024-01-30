@@ -51,7 +51,6 @@ jobs:
         run: |
           funcName=$(az deployment group show -g dev-personal-cv-website-backend -n deploy-function --query properties.outputs.funcName.value)
           echo "${funcName}"
-          echo ${funcName}
 
       - name: 'Deploy code to function app'
-        run: func azure functionapp publish fnapp7smkosjl3tpco
+        run: func azure functionapp publish ${funcName} --javascript
