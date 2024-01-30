@@ -51,4 +51,4 @@ jobs:
           echo $funcName
 
       - name: 'Deploy code to function app'
-        run: func azure functionapp publish ${funcName} --javascript
+        run: func azure functionapp publish $funcName --javascript
