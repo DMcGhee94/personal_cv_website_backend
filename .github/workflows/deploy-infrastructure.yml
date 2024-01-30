@@ -45,12 +45,13 @@ jobs:
         run: zip -r app_src.zip src
 
       - name: 'Create Azure Function via Bicep'
-        run: az deployment group create --name deploy-function --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
+        run: |
+          az deployment group create --name deploy-function --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
+          funcName=$(az deployment group show -g dev-personal-cv-website-backend -n deploy-function --query properties.outputs.funcName.value)
+          echo $funcName
 
       - name: 'Capture Function Name'
         run: |
-          funcName=az deployment group show -g dev-personal-cv-website-backend -n deploy-function --query properties.outputs.funcName.value
-          echo $funcName
           echo $funcName | tr -d '"'
 
       - name: 'Deploy code to function app'
