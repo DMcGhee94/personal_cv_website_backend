@@ -13,7 +13,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  build-and-deploy:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -46,4 +46,4 @@ jobs:
           az deployment group create --name deploy-function --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
           funcName=$(az deployment group show -g dev-personal-cv-website-backend -n deploy-function --query properties.outputs.funcName.value | tr -d \")
           echo $funcName
-          func azure functionapp publish $funcName --javascript  -b remote
+          func azure functionapp publish $funcName --javascript
