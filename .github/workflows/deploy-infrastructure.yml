@@ -56,11 +56,11 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: 'Create CosmosDB Table via Bicep'
-        run: az deployment group create --resource-group {{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
+        run: az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
 
       - name: 'Create Azure Function via Bicep'
         run: |
-          az deployment group create --name deploy-function --RESOURCE_GROUP {{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
-          funcName=$(az deployment group show -g {{ env.RESOURCE_GROUP }} -n deploy-function --query properties.outputs.funcName.value | tr -d \")
+          az deployment group create --name deploy-function --RESOURCE_GROUP ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
+          funcName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-function --query properties.outputs.funcName.value | tr -d \")
           echo "FUNCNAME=$funcName" >> $GITHUB_ENV
           func azure functionapp publish $funcName
