@@ -39,5 +39,5 @@ jobs:
       - name: 'Create Azure Function via Bicep'
         run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
 
-      - name: 'Get publishing profile'
-        run: az functionapp deployment list-publishing-profiles --name TODO:FN App Name  --resource-group TODO: RG Name
+      - name: 'Deploy code to function app'
+        run: az functionapp deployment source config-zip -g dev-personal-cv-website-backend -n fnapp7smkosjl3tpco --src app_src.zip
