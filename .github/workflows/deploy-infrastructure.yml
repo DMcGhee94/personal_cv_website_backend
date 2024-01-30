@@ -23,6 +23,14 @@ jobs:
       - name: 'Checkout repo'
         uses: actions/checkout@v3
 
+      - name: 'Setup Azure Functions'
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+          sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+          sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-$(lsb_release -cs)-prod $(lsb_release -cs) main" > /etc/apt/sources.list.d/dotnetdev.list'
+          sudo apt-get update
+          sudo apt-get install azure-functions-core-tools-4
+
       - name: 'Azure CLI login via OIDC'
         uses: azure/login@v1
         with:
@@ -42,7 +50,8 @@ jobs:
       - name: 'Capture Function Name'
         run: |
           funcName=$(az deployment group show -g dev-personal-cv-website-backend -n deploy-function --query properties.outputs.funcName.value)
-          echo funcName
+          echo "${funcName}"
+          echo ${funcName}
 
       - name: 'Deploy code to function app'
         run: func azure functionapp publish fnapp7smkosjl3tpco
