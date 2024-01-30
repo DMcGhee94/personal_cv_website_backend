@@ -59,15 +59,15 @@ jobs:
         run: |
           az deployment group create --name deploy-function --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
           funcName=$(az deployment group show -g dev-personal-cv-website-backend -n deploy-function --query properties.outputs.funcName.value | tr -d \")
-          echo $funcName
+          echo "FUNCNAME=$funcName" >> $GITHUB_ENV
           func azure functionapp publish $funcName --javascript
 
       - name: 'Test'
-        run: echo $funcName
+        run: echo $FUNCNAME
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
         id: fa
         with:
-          app-name: $funcName
+          app-name: $FUNCNAME
           respect-funcignore: true
