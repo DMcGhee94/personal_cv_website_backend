@@ -37,4 +37,7 @@ jobs:
         run: zip -r app_src.zip src
 
       - name: 'Create Azure Function via Bicep'
-        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth packageUri=app_src.zip
+        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
+
+      - name: 'Get publishing profile'
+        run: az functionapp deployment list-publishing-profiles --name TODO:FN App Name  --resource-group TODO: RG Name
