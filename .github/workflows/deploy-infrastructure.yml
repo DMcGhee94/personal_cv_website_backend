@@ -49,4 +49,4 @@ jobs:
           az deployment group create --name deploy-function --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
           funcName=$(az deployment group show -g dev-personal-cv-website-backend -n deploy-function --query properties.outputs.funcName.value | tr -d \")
           echo $funcName
-          run: func azure functionapp publish $funcName --javascript
+          func azure functionapp publish $funcName --javascript
