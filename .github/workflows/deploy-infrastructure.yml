@@ -41,12 +41,11 @@ jobs:
       - name: 'Create CosmosDB Table via Bicep'
         run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
 
-      - name: 'Zip up application code'
-        run: zip -r app_src.zip src
-
       - name: 'Create Azure Function via Bicep'
         run: |
           az deployment group create --name deploy-function --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
           funcName=$(az deployment group show -g dev-personal-cv-website-backend -n deploy-function --query properties.outputs.funcName.value | tr -d \")
           echo $funcName
+          pwd
+          ls
           func azure functionapp publish $funcName --javascript
