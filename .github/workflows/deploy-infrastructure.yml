@@ -10,6 +10,9 @@ permissions:
 on:
   workflow_dispatch:
 
+env:
+  RESOURCE_GROUP: dev-personal-cv-website-backend
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -53,11 +56,11 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: 'Create CosmosDB Table via Bicep'
-        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
+        run: az deployment group create --resource-group {{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
 
       - name: 'Create Azure Function via Bicep'
         run: |
-          az deployment group create --name deploy-function --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
-          funcName=$(az deployment group show -g dev-personal-cv-website-backend -n deploy-function --query properties.outputs.funcName.value | tr -d \")
+          az deployment group create --name deploy-function --RESOURCE_GROUP {{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
+          funcName=$(az deployment group show -g {{ env.RESOURCE_GROUP }} -n deploy-function --query properties.outputs.funcName.value | tr -d \")
           echo "FUNCNAME=$funcName" >> $GITHUB_ENV
-          func azure functionapp publish $funcName --javascript
+          func azure functionapp publish $funcName
