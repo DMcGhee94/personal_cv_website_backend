@@ -61,7 +61,15 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: 'Create CosmosDB Table via Bicep'
-        run: az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=${{ env.COSMOS_TABLE_NAME }} primaryRegion=${{ env.PRIMARY_DEPLOYMENT_REGION }} secondaryRegion=${{ env.SECONDARY_DEPLOYMENT_REGION }}
+        run: |
+          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} -n deploy-table --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=${{ env.COSMOS_TABLE_NAME }} primaryRegion=${{ env.PRIMARY_DEPLOYMENT_REGION }} secondaryRegion=${{ env.SECONDARY_DEPLOYMENT_REGION }}
+          cosmosName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-table --query properties.outputs.cosmosName.value | tr -d \")
+          echo "COSMOS_ACCOUNT_NAME=$cosmosName" >> $GITHUB_ENV
+
+      - name: 'Create Key Vault'
+        run: |
+          tags='{"inputArray": [{"name": "cosmos-readonly", "value": ""}, {"name": "cosmos-readwrite", "value": ""}]}'
+          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/keyVault.bicep --parameters ./bicep-scripts/parameters/keyVault.parameters.json cosmosName=${{ env.COSMOS_ACCOUNT_NAME }}
 
       - name: 'Create Azure Function via Bicep'
         run: |

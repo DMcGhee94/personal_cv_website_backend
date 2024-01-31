@@ -104,3 +104,5 @@ resource table 'Microsoft.DocumentDB/databaseAccounts/tables@2022-05-15' = {
     }
   }
 }
+
+output cosmosName string = account.name

@@ -1,0 +1,12 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "keyVaultName": {
+        "value": "personal-cvwebsite-vault"
+      },
+      "objectId": {
+        "value": "de1ec047-a2b9-4e59-b8de-0189918eeb6f"
+      }
+    }
+  }
