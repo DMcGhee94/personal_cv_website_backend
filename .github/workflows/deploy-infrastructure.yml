@@ -10,10 +10,18 @@ permissions:
 on:
   workflow_dispatch:
 
+env:
+  RESOURCE_GROUP: dev-personal-cv-website-backend
+  COSMOS_TABLE_NAME: website_visitor_count
+  FUNCTION_WORKER_RUNTIME: node
+  FUNCTION_LANGUAGE: --javascript
+  PRIMARY_DEPLOYMENT_REGION: uksouth
+  SECONDARY_DEPLOYMENT_REGION: ukwest
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  build-and-deploy:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -23,6 +31,28 @@ jobs:
       - name: 'Checkout repo'
         uses: actions/checkout@v3
 
+      - name: 'Setup Node Environment'
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: 'Resolve Project Dependencies Using Npm'
+        shell: bash
+        run: |
+          pushd './'
+          npm install
+          npm run build --if-present
+          npm run test --if-present
+          popd
+
+      - name: 'Setup Azure Functions'
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+          sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+          sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-$(lsb_release -cs)-prod $(lsb_release -cs) main" > /etc/apt/sources.list.d/dotnetdev.list'
+          sudo apt-get update
+          sudo apt-get install azure-functions-core-tools-4
+
       - name: 'Azure CLI login via OIDC'
         uses: azure/login@v1
         with:
@@ -31,16 +61,11 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: 'Create CosmosDB Table via Bicep'
-        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=website_visitor_count primaryRegion=uksouth secondaryRegion=ukwest
-
-      - name: 'Zip up application code'
-        run: zip -r app_src.zip src
-
-      - name: 'List folder directory'
-        run: ls
-
-      - name: 'List contents of zip file'
-        run: less app_src.zip
+        run: az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=${{ env.COSMOS_TABLE_NAME }} primaryRegion=${{ env.PRIMARY_DEPLOYMENT_REGION }} secondaryRegion=${{ env.SECONDARY_DEPLOYMENT_REGION }}
 
       - name: 'Create Azure Function via Bicep'
-        run: az deployment group create --resource-group dev-personal-cv-website-backend --template-file ./bicep-scripts/azureFunction.bicep --parameters appInsightsLocation=uksouth
+        run: |
+          az deployment group create --name deploy-function --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/azureFunction.bicep --parameters runtime=${{ env.FUNCTION_WORKER_RUNTIME }} appInsightsLocation=${{ env.PRIMARY_DEPLOYMENT_REGION }}
+          funcName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-function --query properties.outputs.funcName.value | tr -d \")
+          echo "FUNCNAME=$funcName" >> $GITHUB_ENV
+          func azure functionapp publish $funcName ${{ env.FUNCTION_LANGUAGE }}
