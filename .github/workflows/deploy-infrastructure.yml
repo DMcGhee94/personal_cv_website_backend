@@ -72,7 +72,7 @@ jobs:
 
       - name: 'Create Azure Function via Bicep'
         run: |
-          az deployment group create --name deploy-function --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/azureFunction.bicep --parameters runtime=${{ env.FUNCTION_WORKER_RUNTIME }} appInsightsLocation=${{ env.PRIMARY_DEPLOYMENT_REGION }}
+          az deployment group create --name deploy-function --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/azureFunction.bicep --parameters ./bicep-scripts/parameters/azureFunction.bicepparam runtime=${{ env.FUNCTION_WORKER_RUNTIME }}
           funcName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-function --query properties.outputs.funcName.value | tr -d \")
           echo "FUNCNAME=$funcName" >> $GITHUB_ENV
           func azure functionapp publish $funcName ${{ env.FUNCTION_LANGUAGE }}
