@@ -39,7 +39,7 @@ param tableName string
 @description('Maximum autoscale throughput for the table')
 @minValue(1000)
 @maxValue(1000000)
-param autoscaleMaxThroughput int = 4000
+param autoscaleMaxThroughput int = 2000
 
 var consistencyPolicy = {
   Eventual: {
