@@ -100,4 +100,3 @@ __azurite_db*__.json
 
 # Test Bicep File
 *test.bicep
-*returnViewCount.js

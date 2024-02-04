@@ -28,6 +28,7 @@ param keysPermissions array = [
 @description('Specifies the permissions to secrets in the vault. Valid values are: all, get, list, set, delete, backup, restore, recover, and purge.')
 param secretsPermissions array = [
   'list'
+  'get'
 ]
 
 @description('Specifies whether the key vault is a standard vault or a premium vault.')
@@ -69,8 +70,6 @@ resource kv 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
     }
   }
 }
-
-output subTest object = subscription()
 
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2022-05-15' existing = {
   name: cosmosName

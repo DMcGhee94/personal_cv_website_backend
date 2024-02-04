@@ -23,6 +23,9 @@ param appInsightsLocation string
 ])
 param runtime string = 'node'
 
+@description('The name of the key-vault where secrets will be retrieved from')
+param keyVaultName string
+
 var functionAppName = appName
 var hostingPlanName = appName
 var applicationInsightsName = appName
@@ -52,50 +55,22 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   properties: {}
 }
 
-resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
-  name: functionAppName
-  location: location
-  kind: 'functionapp'
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    serverFarmId: hostingPlan.id
-    siteConfig: {
-      appSettings: [
-        {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
-        }
-        {
-          name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
-        }
-        {
-          name: 'WEBSITE_CONTENTSHARE'
-          value: toLower(functionAppName)
-        }
-        {
-          name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~4'
-        }
-        {
-          name: 'WEBSITE_NODE_DEFAULT_VERSION'
-          value: '~14'
-        }
-        {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: applicationInsights.properties.InstrumentationKey
-        }
-        {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: functionWorkerRuntime
-        }
-      ]
-      ftpsState: 'FtpsOnly'
-      minTlsVersion: '1.2'
-    }
-    httpsOnly: true
+resource kv 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
+  name: keyVaultName
+  scope: resourceGroup(subscription().subscriptionId, resourceGroup().name)
+}
+
+module functionApp './modules/functionApp.bicep' = {
+  name: 'FunctionApp'
+  params: {
+    functionAppName: functionAppName
+    location: location
+    hostingPlanId: hostingPlan.id
+    functionWorkerRuntime: functionWorkerRuntime
+    storageAccountName: storageAccountName
+    applicationInsightsName: applicationInsightsName
+    cosmosReadWriteString: kv.getSecret('COSMOS-ACCOUNT-READWRITE')
+    cosmosReadOnlyString: kv.getSecret('COSMOS-ACCOUNT-READONLY')
   }
 }
 
