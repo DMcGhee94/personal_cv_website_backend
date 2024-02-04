@@ -68,7 +68,6 @@ jobs:
 
       - name: 'Create Key Vault'
         run: |
-          tags='{"inputArray": [{"name": "cosmos-readonly", "value": ""}, {"name": "cosmos-readwrite", "value": ""}]}'
           az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/keyVault.bicep --parameters ./bicep-scripts/parameters/keyVault.parameters.json cosmosName=${{ env.COSMOS_ACCOUNT_NAME }}
 
       - name: 'Create Azure Function via Bicep'
