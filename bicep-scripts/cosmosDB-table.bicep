@@ -72,6 +72,9 @@ resource account 'Microsoft.DocumentDB/databaseAccounts@2022-05-15' = {
   properties: {
     capabilities: [
       {
+        name: 'EnableTable'
+      }
+      {
         name: 'EnableServerless'
       }
     ]
@@ -88,11 +91,6 @@ resource table 'Microsoft.DocumentDB/databaseAccounts/tables@2022-05-15' = {
   properties: {
     resource: {
       id: tableName
-    }
-    options: {
-      autoscaleSettings: {
-        maxThroughput: autoscaleMaxThroughput
-      }
     }
   }
 }
