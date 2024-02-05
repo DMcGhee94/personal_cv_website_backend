@@ -12,29 +12,50 @@ const env = {
     }  
 };
 
-const readClient = TableClient.fromConnectionString(
-    env.readOnly.connectionString,
-    env.readOnly.tableName    
-);
+const client = {
+    readOnly: TableClient.fromConnectionString(
+        env.readOnly.connectionString,
+        env.readOnly.tableName
+    ),
+    readWrite: TableClient.fromConnectionString(
+        env.readWrite.connectionString,
+        env.readWrite.tableName
+    )
+};
 
-const writeClient = TableClient.fromConnectionString(
-    env.readWrite.connectionString,
-    env.readWrite.tableName
-);
+const getCount = () => {
+    return client.readOnly.getEntity("cv-website", "1");
+};
+
+const initialRecord = async () => {
+    await client.readWrite.upsertEntity(
+        {
+            partitionKey: "cv-website", 
+            rowKey: "1", 
+            count: 1
+        }
+    );
+};
 
 app.http('returnViewCount', {
     methods: ['GET'],
     authLevel: 'anonymous',
     handler: async (request, context) => {
-        context.log(`Http function processed request for url "${request.url}"`);
 
-        var viewCountRecord = readClient.listEntities();     
+        var recordCount = {};
 
-        if (!viewCountRecord) {
-            await writeClient.upsertEntity({"PartitionKey": "cv-website", "RowKey": "1", "Count": 1});
-            viewCountRecord = await readClient.listEntities();
+        try {
+            recordCount = await getCount();
+        } catch (error) {
+            if (error.statusCode === 404) {
+                await initialRecord();
+    
+                recordCount = await getCount();
+            } else {
+                return { body: JSON.stringify(error) };
+            };
         };
 
-        return { body: viewCountRecord };
+        return { body: recordCount.count };
     }
 });

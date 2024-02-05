@@ -10,3 +10,4 @@ test
 tsconfig.json
 bicep-scripts
 README.md
+*test.js
