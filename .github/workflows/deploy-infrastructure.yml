@@ -77,6 +77,10 @@ jobs:
           echo $funcName
           echo "FUNCNAME=$funcName" >> $GITHUB_ENV
 
+      - name: 'Delay 30 seconds'
+        run: sleep 30s
+
       - name: 'Publish Azure Function code'
         run: |
+          az functionapp list
           func azure functionapp publish ${{ env.FUNCNAME }} ${{ env.FUNCTION_LANGUAGE }}
