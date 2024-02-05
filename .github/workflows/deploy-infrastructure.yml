@@ -60,9 +60,9 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: 'Create CosmosDB Table via Bicep'
+      - name: 'Create CosmosDB Table'
         run: |
-          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} -n deploy-table --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=${{ env.COSMOS_TABLE_NAME }} primaryRegion=${{ env.PRIMARY_DEPLOYMENT_REGION }} secondaryRegion=${{ env.SECONDARY_DEPLOYMENT_REGION }}
+          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} -n deploy-table --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=${{ env.COSMOS_TABLE_NAME }} primaryRegion=${{ env.PRIMARY_DEPLOYMENT_REGION }}
           cosmosName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-table --query properties.outputs.cosmosName.value | tr -d \")
           echo "COSMOS_ACCOUNT_NAME=$cosmosName" >> $GITHUB_ENV
 
@@ -70,9 +70,10 @@ jobs:
         run: |
           az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/keyVault.bicep --parameters ./bicep-scripts/parameters/keyVault.parameters.json cosmosName=${{ env.COSMOS_ACCOUNT_NAME }}
 
-      - name: 'Create Azure Function via Bicep'
+      - name: 'Create Azure Function'
         run: |
           az deployment group create --name deploy-function --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/azureFunction.bicep --parameters ./bicep-scripts/parameters/azureFunction.bicepparam runtime=${{ env.FUNCTION_WORKER_RUNTIME }}
           funcName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-function --query properties.outputs.funcName.value | tr -d \")
+          echo $funcName
           echo "FUNCNAME=$funcName" >> $GITHUB_ENV
           func azure functionapp publish $funcName ${{ env.FUNCTION_LANGUAGE }}
