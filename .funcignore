@@ -8,5 +8,6 @@ __queuestorage__
 local.settings.json
 test
 tsconfig.json
-*.bicep
+bicep-scripts
 README.md
+*test.js

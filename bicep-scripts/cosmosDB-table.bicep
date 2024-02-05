@@ -18,7 +18,7 @@ param secondaryRegion string
   'BoundedStaleness'
   'Strong'
 ])
-param defaultConsistencyLevel string = 'Session'
+param defaultConsistencyLevel string = 'Eventual'
 
 @description('Max stale requests. Required for BoundedStaleness. Valid ranges, Single Region: 10 to 2147483647. Multi Region: 100000 to 2147483647.')
 @minValue(10)
@@ -31,7 +31,7 @@ param maxStalenessPrefix int = 100000
 param maxIntervalInSeconds int = 300
 
 @description('Enable system managed failover for regions')
-param systemManagedFailover bool = true
+param systemManagedFailover bool = false
 
 @description('The name for the table')
 param tableName string
@@ -39,7 +39,7 @@ param tableName string
 @description('Maximum autoscale throughput for the table')
 @minValue(1000)
 @maxValue(1000000)
-param autoscaleMaxThroughput int = 4000
+param autoscaleMaxThroughput int = 1000
 
 var consistencyPolicy = {
   Eventual: {
