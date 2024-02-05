@@ -38,8 +38,8 @@ const updateCount = async (count) => {
     )
 };
 
-app.http('updateViewCounter', {
-    methods: ['POST'],
+app.http('viewCount', {
+    methods: ['GET', 'POST'],
     authLevel: 'anonymous',
     handler: async (request, context) => {
         var recordCount = {};
@@ -47,8 +47,12 @@ app.http('updateViewCounter', {
 
         try {
             recordCount = await getCount();
-            newCount = recordCount.count + 1;
-            await updateCount(newCount);
+
+            if (request.method === 'POST') {
+                newCount = recordCount.count + 1;
+                await updateCount(newCount);
+            }
+            
         } catch (error) {
             if (error.statusCode === 404) {
                 await updateCount(1);
