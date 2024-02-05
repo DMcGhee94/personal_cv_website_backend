@@ -68,6 +68,11 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
   properties: {
     serverFarmId: hostingPlan.id
     siteConfig: {
+      cors: {
+        allowedOrigins: [
+          'http://127.0.0.1:3000/'
+        ]
+      }
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
