@@ -33,11 +33,6 @@ param systemManagedFailover bool = false
 @description('The name for the table')
 param tableName string
 
-@description('Maximum autoscale throughput for the table')
-@minValue(1000)
-@maxValue(1000000)
-param autoscaleMaxThroughput int = 1000
-
 var consistencyPolicy = {
   Eventual: {
     defaultConsistencyLevel: 'Eventual'
