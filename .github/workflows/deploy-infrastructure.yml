@@ -76,4 +76,7 @@ jobs:
           funcName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-function --query properties.outputs.funcName.value | tr -d \")
           echo $funcName
           echo "FUNCNAME=$funcName" >> $GITHUB_ENV
-          func azure functionapp publish $funcName ${{ env.FUNCTION_LANGUAGE }}
+
+      - name: 'Publish Azure Function code'
+        run: |
+          func azure functionapp publish ${{ env.FUNCNAME }} ${{ env.FUNCTION_LANGUAGE }}
