@@ -7,9 +7,6 @@ param location string = resourceGroup().location
 @description('The primary region for the Cosmos DB account.')
 param primaryRegion string
 
-@description('The secondary region for the Cosmos DB account.')
-param secondaryRegion string
-
 @description('The default consistency level of the Cosmos DB account.')
 @allowed([
   'Eventual'
@@ -18,7 +15,7 @@ param secondaryRegion string
   'BoundedStaleness'
   'Strong'
 ])
-param defaultConsistencyLevel string = 'Eventual'
+param defaultConsistencyLevel string = 'Session'
 
 @description('Max stale requests. Required for BoundedStaleness. Valid ranges, Single Region: 10 to 2147483647. Multi Region: 100000 to 2147483647.')
 @minValue(10)
@@ -35,11 +32,6 @@ param systemManagedFailover bool = false
 
 @description('The name for the table')
 param tableName string
-
-@description('Maximum autoscale throughput for the table')
-@minValue(1000)
-@maxValue(1000000)
-param autoscaleMaxThroughput int = 1000
 
 var consistencyPolicy = {
   Eventual: {
@@ -66,11 +58,6 @@ var locations = [
     failoverPriority: 0
     isZoneRedundant: false
   }
-  {
-    locationName: secondaryRegion
-    failoverPriority: 1
-    isZoneRedundant: false
-  }
 ]
 
 resource account 'Microsoft.DocumentDB/databaseAccounts@2022-05-15' = {
@@ -81,6 +68,9 @@ resource account 'Microsoft.DocumentDB/databaseAccounts@2022-05-15' = {
     capabilities: [
       {
         name: 'EnableTable'
+      }
+      {
+        name: 'EnableServerless'
       }
     ]
     consistencyPolicy: consistencyPolicy[defaultConsistencyLevel]
@@ -96,11 +86,6 @@ resource table 'Microsoft.DocumentDB/databaseAccounts/tables@2022-05-15' = {
   properties: {
     resource: {
       id: tableName
-    }
-    options: {
-      autoscaleSettings: {
-        maxThroughput: autoscaleMaxThroughput
-      }
     }
   }
 }
