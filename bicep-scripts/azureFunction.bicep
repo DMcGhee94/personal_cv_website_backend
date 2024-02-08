@@ -70,7 +70,9 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
     siteConfig: {
       cors: {
         allowedOrigins: [
-          'http://127.0.0.1:3000/'
+          'http://127.0.0.1:3000'
+          'https://dmcvvgmmu3kqkdxgq.z33.web.core.windows.net'
+          'https://darren-mcghee.com'
         ]
       }
       appSettings: [
