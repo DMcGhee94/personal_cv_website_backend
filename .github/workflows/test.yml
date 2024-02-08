@@ -32,9 +32,16 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: ''
-        shell: bash
+      - name: 'Define variables'
         run: |
           echo "Github.ref: ${{ github.ref }}"
           echo "Github.base_ref: ${{ github.base_ref}}"
           echo "Github.head_ref: ${{ github.head_ref}}"
+          if [ "${{ github.base_ref }}" = "refs/heads/main"]; then 
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          elif [ "${{ github.base_ref }}" = "refs/heads/dev"]; then 
+            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+          fi
+
+      - name: 'Test'
+        run: echo "${{ env.ENVIRONMENT }}"
