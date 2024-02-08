@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  RESOURCE_GROUP: dev-personal-cv-website-backend
+  RESOURCE_GROUP: personal-cv-website-backend
   COSMOS_TABLE_NAME: website_visitor_count
   FUNCTION_WORKER_RUNTIME: node
   FUNCTION_LANGUAGE: --javascript
