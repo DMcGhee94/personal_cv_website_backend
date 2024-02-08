@@ -10,6 +10,11 @@ permissions:
 on:
   workflow_dispatch:
 
+  pull_request:
+    branches:
+      - main
+      - dev
+
 env:
   RESOURCE_GROUP: personal-cv-website-backend
   COSMOS_TABLE_NAME: website_visitor_count
