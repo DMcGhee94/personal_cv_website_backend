@@ -48,3 +48,14 @@ jobs:
 
       - name: 'Test'
         run: echo "${{ env.ENVIRONMENT }}"
+
+    outputs:
+        env_name: ${{ env.ENVIRONMENT }}
+
+  start:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    steps:
+      - name: 'Tester'
+        run: |
+          echo "${{ needs.build-and-deploy.outputs.env_name }}"
