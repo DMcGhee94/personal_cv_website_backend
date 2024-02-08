@@ -9,11 +9,6 @@ permissions:
 # Controls when the workflow will run
 on:
   workflow_dispatch:
-    
-  pull_request:
-    branches:
-      - main
-      - dev
 
 env:
   RESOURCE_GROUP: personal-cv-website-backend
@@ -39,9 +34,10 @@ jobs:
           echo "Github.ref: ${{ github.ref }}"
           echo "Github.base_ref: ${{ github.base_ref }}"
           echo "Github.head_ref: ${{ github.head_ref }}"
-          if [ "${{ github.base_ref }}" == "main"]; then 
+
+          if [ "main" == "main"]; then 
             echo "ENVIRONMENT=prod" >> $GITHUB_ENV
-          elif [ "${{ github.base_ref }}" == "dev"]; then 
+          elif [ "dev" == "dev"]; then 
             echo "ENVIRONMENT=dev" >> $GITHUB_ENV
           fi
 
