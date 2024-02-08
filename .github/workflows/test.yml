@@ -40,10 +40,10 @@ jobs:
           echo "Github.base_ref: ${{ github.base_ref }}"
           echo "Github.head_ref: ${{ github.head_ref }}"
 
-          if [ "main" == "main"]; then 
-            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
-          elif [ "dev" == "dev"]; then 
-            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+          if [ "main" == "main" ]; then 
+            echo "ENVIRONMENT=prod" >> "$GITHUB_ENV"
+          elif [ "dev" == "dev" ]; then 
+            echo "ENVIRONMENT=dev" >> "$GITHUB_ENV"
           fi
 
       - name: 'Test'
