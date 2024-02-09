@@ -66,6 +66,9 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2021-03-01' = {
 
 module functionApp './modules/functionApp.bicep' ={
   name: 'deployFunctionApp'
+  dependsOn: [
+    storageAccount
+  ]
   params: {
     functionAppName: functionAppName
     location: location
