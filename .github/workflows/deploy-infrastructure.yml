@@ -84,7 +84,7 @@ jobs:
 
       - name: 'Create Azure Function'
         run: |
-          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} -n deploy-function-${{ env.UTC_NOW }} --template-file ./bicep-scripts/azureFunction.bicep --parameters ./bicep-scripts/parameters/azureFunction.bicepparam -p runtime=${{ env.FUNCTION_WORKER_RUNTIME }} p keyVaultName=${{ env.KEY_VAULT_NAME }}
+          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} -n deploy-function-${{ env.UTC_NOW }} --template-file ./bicep-scripts/azureFunction.bicep --parameters ./bicep-scripts/parameters/azureFunction.bicepparam -p runtime=${{ env.FUNCTION_WORKER_RUNTIME }} -p keyVaultName=${{ env.KEY_VAULT_NAME }}
           funcName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-function-${{ env.UTC_NOW }} --query properties.outputs.funcName.value | tr -d \")
           echo $funcName
           echo "FUNCNAME=$funcName" >> $GITHUB_ENV
