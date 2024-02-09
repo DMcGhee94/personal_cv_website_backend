@@ -23,17 +23,23 @@ param appInsightsLocation string
 ])
 param runtime string = 'node'
 
-@secure()
-param cosmosReadWriteString string
-
-@secure()
-param cosmosReadOnlyString string
+param keyVaultName string
 
 var functionAppName = appName
 var hostingPlanName = appName
 var applicationInsightsName = appName
 var storageAccountName = '${uniqueString(resourceGroup().id)}azfunctions'
 var functionWorkerRuntime = runtime
+
+var allowedCorsOrigins = [
+          'http://127.0.0.1:3000'
+          'https://dmcvvgmmu3kqkdxgq.z33.web.core.windows.net'
+          'https://darren-mcghee.com'
+        ]
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
+}
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
   name: storageAccountName
@@ -58,65 +64,18 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   properties: {}
 }
 
-resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
-  name: functionAppName
-  location: location
-  kind: 'functionapp'
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    serverFarmId: hostingPlan.id
-    siteConfig: {
-      cors: {
-        allowedOrigins: [
-          'http://127.0.0.1:3000'
-          'https://dmcvvgmmu3kqkdxgq.z33.web.core.windows.net'
-          'https://darren-mcghee.com'
-        ]
-      }
-      appSettings: [
-        {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
-        }
-        {
-          name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
-        }
-        {
-          name: 'WEBSITE_CONTENTSHARE'
-          value: toLower(functionAppName)
-        }
-        {
-          name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~4'
-        }
-        {
-          name: 'WEBSITE_NODE_DEFAULT_VERSION'
-          value: '~20'
-        }
-        {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: applicationInsights.properties.InstrumentationKey
-        }
-        {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: functionWorkerRuntime
-        }
-        {
-          name: 'COSMOSDB_CONNECTION_READWRITE'
-          value: cosmosReadWriteString
-        }
-        {
-          name: 'COSMOSDB_CONNECTION_READONLY'
-          value: cosmosReadOnlyString
-        }
-      ]
-      ftpsState: 'FtpsOnly'
-      minTlsVersion: '1.2'
-    }
-    httpsOnly: true
+module functionApp './modules/functionApp.bicep' ={
+  name: 'deployFunctionApp'
+  params: {
+    functionAppName: functionAppName
+    location: location
+    hostingPlanId: hostingPlan.id
+    functionWorkerRuntime: functionWorkerRuntime
+    cosmosReadOnlyString: keyVault.getSecret('COSMOS-ACCOUNT-READONLY')
+    cosmosReadWriteString: keyVault.getSecret('COSMOS-ACCOUNT-READWRITE')
+    storageAccountName: storageAccountName
+    applicationInsightsName: applicationInsightsName
+    allowedCorsOrigins: allowedCorsOrigins
   }
 }
 

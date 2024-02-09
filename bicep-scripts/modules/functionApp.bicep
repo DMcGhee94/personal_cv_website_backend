@@ -1,6 +1,6 @@
 param functionAppName string
 
-param location string
+param location string = resourceGroup().location
 
 param hostingPlanId string
 
@@ -22,6 +22,8 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
   name: applicationInsightsName
 }
 
+param allowedCorsOrigins array
+
 resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
   name: functionAppName
   location: location
@@ -32,6 +34,9 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
   properties: {
     serverFarmId: hostingPlanId
     siteConfig: {
+      cors: {
+        allowedOrigins: allowedCorsOrigins
+      }
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
@@ -51,7 +56,7 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
         }
         {
           name: 'WEBSITE_NODE_DEFAULT_VERSION'
-          value: '~14'
+          value: '~20'
         }
         {
           name: 'APPINSIGHTS_INSTRUMENTATIONKEY'

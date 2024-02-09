@@ -94,3 +94,5 @@ resource readWriteSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' 
     value: primaryReadOnly
   }
 }
+
+output keyVaultName string = keyVaultName

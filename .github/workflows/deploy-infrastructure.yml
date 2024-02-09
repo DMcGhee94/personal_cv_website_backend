@@ -11,12 +11,11 @@ on:
   workflow_dispatch:
 
 env:
-  RESOURCE_GROUP: personal-cv-website-backend
+  RESOURCE_GROUP: personal-cv-website
   COSMOS_TABLE_NAME: website_visitor_count
   FUNCTION_WORKER_RUNTIME: node
   FUNCTION_LANGUAGE: --javascript
   PRIMARY_DEPLOYMENT_REGION: uksouth
-  SECONDARY_DEPLOYMENT_REGION: ukwest
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -59,6 +58,11 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 'Define current date time'
+        run: |
+          current_date_time=$(date -u +"%Y%m%d-%H%M%S")
+          echo "UTC_NOW=$current_date_time" >> $GITHUB_ENV
           
       - name: 'Create resource group'
         run: |
@@ -68,18 +72,20 @@ jobs:
 
       - name: 'Create CosmosDB Table'
         run: |
-          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} -n deploy-table --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=${{ env.COSMOS_TABLE_NAME }} primaryRegion=${{ env.PRIMARY_DEPLOYMENT_REGION }}
-          cosmosName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-table --query properties.outputs.cosmosName.value | tr -d \")
+          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} -n deploy-table-${{ env.UTC_NOW }} --template-file ./bicep-scripts/cosmosDB-table.bicep --parameters tableName=${{ env.COSMOS_TABLE_NAME }} primaryRegion=${{ env.PRIMARY_DEPLOYMENT_REGION }}
+          cosmosName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-table-${{ env.UTC_NOW }} --query properties.outputs.cosmosName.value | tr -d \")
           echo "COSMOS_ACCOUNT_NAME=$cosmosName" >> $GITHUB_ENV
 
       - name: 'Create Key Vault'
         run: |
-          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/keyVault.bicep --parameters ./bicep-scripts/parameters/keyVault.parameters.json cosmosName=${{ env.COSMOS_ACCOUNT_NAME }}
+          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} -n deploy-keyvault-${{ env.UTC_NOW }} --template-file ./bicep-scripts/keyVault.bicep -p ./bicep-scripts/parameters/keyVault.bicepparam -p cosmosName=${{ env.COSMOS_ACCOUNT_NAME }}
+          keyVaultName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-keyvault-${{ env.UTC_NOW }} --query properties.outputs.keyVaultName.value | tr -d \")
+          echo "KEY_VAULT_NAME=$keyVaultName" >> $GITHUB_ENV
 
       - name: 'Create Azure Function'
         run: |
-          az deployment group create --name deploy-function --resource-group ${{ env.RESOURCE_GROUP }} --template-file ./bicep-scripts/azureFunction.bicep --parameters ./bicep-scripts/parameters/azureFunction.bicepparam runtime=${{ env.FUNCTION_WORKER_RUNTIME }}
-          funcName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-function --query properties.outputs.funcName.value | tr -d \")
+          az deployment group create --resource-group ${{ env.RESOURCE_GROUP }} -n deploy-function-${{ env.UTC_NOW }} --template-file ./bicep-scripts/azureFunction.bicep --parameters ./bicep-scripts/parameters/azureFunction.bicepparam -p runtime=${{ env.FUNCTION_WORKER_RUNTIME }} p keyVaultName=${{ env.KEY_VAULT_NAME }}
+          funcName=$(az deployment group show -g ${{ env.RESOURCE_GROUP }} -n deploy-function-${{ env.UTC_NOW }} --query properties.outputs.funcName.value | tr -d \")
           echo $funcName
           echo "FUNCNAME=$funcName" >> $GITHUB_ENV
 
