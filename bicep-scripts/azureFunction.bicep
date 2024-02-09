@@ -33,8 +33,9 @@ var functionWorkerRuntime = runtime
 
 var allowedCorsOrigins = [
           'http://127.0.0.1:3000'
-          'https://dmcvvgmmu3kqkdxgq.z33.web.core.windows.net'
           'https://darren-mcghee.com'
+          'https://www.darren-mcghee.com'
+          'https://dev.darren-mcghee.com'
         ]
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
